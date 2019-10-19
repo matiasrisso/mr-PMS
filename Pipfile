@@ -16,6 +16,8 @@ environs = "*"
 flask-migrate = "*"
 flask-wtf = "*"
 flask-script = "*"
+pytest = "*"
+flaskr = "*"
 
 [requires]
 python_version = "3.7"
