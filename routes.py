@@ -45,8 +45,10 @@ def add_reservation():
 @routes_blueprint.route('/cancel_reservation', methods=['PUT'])
 def cancel_reservation():
     res = Reservation.query.filter_by(id=request.args['reservation_id']).first()
+
     if res is None:
         return "No such reservation exists"
+
     try:
         res.status = ReservationStatus.CANCELLED
         db.session.commit()
@@ -78,14 +80,16 @@ def get_reservation():
 
 @routes_blueprint.route('/get_inventory_list', methods=['GET'])
 def get_inventory_list():
+    # Prepare data
     hotel_id = request.args['hotel_id']
     start_date = datetime.strptime(request.args['start_date'], '%d-%m-%Y').date()
     end_date = datetime.strptime(request.args['end_date'], '%d-%m-%Y').date()
 
+    # Gets available and occupied rooms by given hotel per day (by given range) per room type
     result = db.session.execute("""
         SELECT d.date, t.available_quantity, t.occupied_quantity, t.quantity, t.room_type
-          FROM (SELECT to_char(date_trunc('day', ((DATE'25-10-2019' - INTERVAL '1 day')::date + offs + 1)), 'YYYY-MM-DD') AS date 
-                  FROM generate_series(0, (DATE'03-11-2019'-DATE'25-10-2019'), 1) AS offs
+          FROM (SELECT to_char(date_trunc('day', ((:start_date - INTERVAL '1 day')::date + offs + 1)), 'YYYY-MM-DD') AS date 
+                  FROM generate_series(0, (:end_date-:start_date), 1) AS offs
                ) d 
           LEFT OUTER JOIN ( SELECT DISTINCT res.as_of_date,
                                             (r_hotel_rooms.quantity - res.occupied) AS available_quantity,
@@ -95,16 +99,16 @@ def get_inventory_list():
 		                      FROM r_hotel_rooms
 		                      LEFT OUTER JOIN ( SELECT room_type, as_of_date, COUNT(t_reservation.id) occupied
 							                      FROM (SELECT d::date AS as_of_date
-									                      FROM generate_series(DATE'25-10-2019', DATE'03-11-2019', '1 day'
+									                      FROM generate_series(:start_date, :end_date, '1 day'
 									                   ) AS d
 									          ) dates
                                                   LEFT JOIN t_reservation
                                                     ON dates.as_of_date BETWEEN arrival_date AND departure_date
-							                     WHERE t_reservation.hotel_id = 1
+							                     WHERE t_reservation.hotel_id = :hotel_id
 							                       AND t_reservation.status = 'ACTIVE'
 							                     GROUP BY as_of_date, room_type ORDER BY as_of_date,room_type) AS res
 			                    ON r_hotel_rooms.room_type = res.room_type
-		                     WHERE r_hotel_rooms.hotel_id = 1
+		                     WHERE r_hotel_rooms.hotel_id = :hotel_id
 		                     ORDER BY res.as_of_date
 	                      ) as t
             ON d.date = to_char(date_trunc('day', t.as_of_date), 'YYYY-MM-DD') 
@@ -116,7 +120,7 @@ def get_inventory_list():
                   t.as_of_date
     """, {"hotel_id": hotel_id, "start_date": start_date, "end_date": end_date})
 
-    # Hotel structure
+    # Default hotel's room layout for un-reserved days
     hotels_result = db.session.execute("""
         SELECT * from r_hotel_rooms 
         WHERE r_hotel_rooms.hotel_id = :hotel_id
@@ -128,6 +132,8 @@ def get_inventory_list():
             'occupied_rooms': 0
         }
 
+    # Going over given dates and setting and replacing default hotel's layout
+    # with the counted occupied and available rooms per room type
     dates_dict = {}
     for r in result:
         key = r['date']

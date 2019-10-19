@@ -3,6 +3,8 @@ from db.enums import room_type_enum, reservation_status_enum
 
 db = SQLAlchemy()
 
+
+# Represents a Reservations table
 class Reservation(db.Model):
     __tablename__ = "t_reservation"
     id = db.Column(db.Integer, primary_key=True)
@@ -30,6 +32,7 @@ class Reservation(db.Model):
         }
 
 
+# Represents a relation table of hotels and their corresponding room types an quantities
 class HotelRooms(db.Model):
     __tablename__ = "r_hotel_rooms"
     id = db.Column(db.Integer, primary_key=True)
@@ -43,6 +46,7 @@ class HotelRooms(db.Model):
         self.quantity = quantity
 
 
+# Represents a Hotels table
 class Hotel(db.Model):
     __tablename__ = "t_hotel"
     id = db.Column(db.Integer, primary_key=True)
