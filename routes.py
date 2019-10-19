@@ -1,9 +1,7 @@
 import copy
 from datetime import datetime, timedelta
 from sqlalchemy import exc
-from flask import Blueprint
-from flask import request
-from flask import jsonify
+from flask import Blueprint, request, jsonify
 from db.models import *
 from db.enums import ReservationStatus
 
@@ -23,23 +21,23 @@ def add_reservation():
                                   request.args['room_type'],
                                   datetime.strptime(request.args['arrival_date'], '%d-%m-%Y').date(),
                                   datetime.strptime(request.args['departure_date'], '%d-%m-%Y').date(),
-                                  request.args['status'])
+                                  ReservationStatus.ACTIVE)
     # Reservation made only in the future
     # Considering that today can be reserved instantly
     if new_reservation.arrival_date < datetime.today().date():
-        return "Reservation can not be made in the past"
+        return "Reservation can not be made in the past", 400
     # Departure date always after arrival date
     if new_reservation.departure_date < new_reservation.arrival_date:
-        return "Departure date must always be set to after arrival date"
+        return "Departure date must always be set to after arrival date", 400
 
     db.session.add(new_reservation)
     try:
         db.session.commit()
-        return "Reservation made"
+        return "Reservation made", 201
     except exc.IntegrityError as e:
-        return "No such hotel exists"
+        return "No such hotel exists", 404
     except exc.SQLAlchemyError as e:
-        return jsonify(e.args)
+        return jsonify(e.args), 400
 
 
 @routes_blueprint.route('/cancel_reservation', methods=['PUT'])
@@ -47,35 +45,34 @@ def cancel_reservation():
     res = Reservation.query.filter_by(id=request.args['reservation_id']).first()
 
     if res is None:
-        return "No such reservation exists"
+        return "No such reservation exists", 404
 
     try:
         res.status = ReservationStatus.CANCELLED
         db.session.commit()
     except exc.SQLAlchemyError as e:
-        return jsonify(e.args)
-    return "Reservation {} canceled".format(request.args['reservation_id'])
+        return jsonify(e.args), 400
+    return "Reservation {} canceled".format(request.args['reservation_id']), 200
 
 
 @routes_blueprint.route('/delete_reservation', methods=['DELETE'])
 def delete_reservation():
     res = Reservation.query.filter_by(id=request.args['reservation_id']).first()
     if res is None:
-        return "No such reservation exists"
+        return "No such reservation exists", 404
 
     Reservation.query.filter_by(id=request.args['reservation_id']).delete()
     db.session.commit()
-    return "Reservation {} deleted".format(request.args['reservation_id'])
+    return "Reservation {} deleted".format(request.args['reservation_id']), 200
 
 
 @routes_blueprint.route('/get_reservation', methods=['GET'])
 def get_reservation():
-    res = jsonify(Reservation.query.filter_by(id=request.args['reservation_id']).first())
+    res = Reservation.query.filter_by(id=request.args['reservation_id']).first()
 
     if res is None:
-        return "No such reservation exists"
-    return res.serialize()
-
+        return "No such reservation exists", 400
+    return jsonify(res.serialize()), 200
 
 
 @routes_blueprint.route('/get_inventory_list', methods=['GET'])
@@ -125,6 +122,10 @@ def get_inventory_list():
         SELECT * from r_hotel_rooms 
         WHERE r_hotel_rooms.hotel_id = :hotel_id
     """, {"hotel_id": hotel_id})
+
+    if hotels_result.rowcount == 0:
+        return "No such hotel exists", 404
+
     hotel_default = {}
     for h in hotels_result:
         hotel_default[h['room_type']] = {
@@ -147,4 +148,4 @@ def get_inventory_list():
             dates_dict[key][room_type]['available_rooms'] = r['available_quantity']
             dates_dict[key][room_type]['occupied_rooms'] = r['occupied_quantity']
 
-    return jsonify(dates_dict)
+    return jsonify(dates_dict), 200

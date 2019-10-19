@@ -1,10 +1,23 @@
 from environs import Env
 from flask import Flask
+from flask_swagger_ui import get_swaggerui_blueprint
 from db.models import db
 from db.seed import *
 from routes import routes_blueprint
 
-# Load pre defined enviroment variables
+
+# Swagger config
+SWAGGER_URL = '/swagger'
+API_URL = '/static/swagger.yaml'
+SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
+    SWAGGER_URL,
+    API_URL,
+    config={
+        'app_name': "Best-PMS-ever"
+    }
+)
+
+# Load pre defined environment variables
 env = Env()
 env.read_env()
 
@@ -28,6 +41,7 @@ db.create_all()
 
 # Connect routes to app
 app.register_blueprint(routes_blueprint)
+app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
 
 if __name__ == '__main__':
     # Add initial data to the tables

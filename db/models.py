@@ -1,18 +1,19 @@
 from flask_sqlalchemy import SQLAlchemy
 from db.enums import room_type_enum, reservation_status_enum
+from db.enums import ReservationStatus
 
 db = SQLAlchemy()
 
 
 # Represents a Reservations table
-class Reservation(db.Model):
+class Reservation( db.Model):
     __tablename__ = "t_reservation"
     id = db.Column(db.Integer, primary_key=True)
     hotel_id = db.Column(db.Integer, db.ForeignKey('t_hotel.id'))
     room_type = db.Column(room_type_enum)
     arrival_date = db.Column(db.Date)
     departure_date = db.Column(db.Date)
-    status = db.Column(reservation_status_enum)
+    status = db.Column(reservation_status_enum, default=ReservationStatus.ACTIVE)
 
     def __init__(self, hotel_id, room_type, arrival_date,
                  departure_date, status):

@@ -1,0 +1,143 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Best-PMS-ever
+  description: Property Management System
+  contact:
+    email: idanbe5@gmail.com
+servers:
+  - url: /
+tags:
+  - name: Reservation management
+    description: Example API for reservations management
+paths:
+  /get_reservation:
+    get:
+      tags:
+        - Reservation management
+      description: Gets a hotel room reservation by ID
+      summary: Get reservation
+      parameters:
+        - in: query
+          name: reservation_id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the reservation to get
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  arrival_date:
+                    type: string
+                  departure_date:
+                    type: string
+                  hotel_id:
+                    type: integer
+                  room_type:
+                    type: integer
+                  status:
+                    type: integer
+        "404":
+          description: Not Found
+        "400":
+          description: Bad Request
+  /delete_reservation:
+    delete:
+      tags:
+        - Reservation management
+      description: Delete a hotel room reservation by ID
+      summary: Delete reservation
+      parameters:
+        - in: query
+          name: reservation_id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the reservation to delete
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+  /cancel_reservation:
+    put:
+      tags:
+        - Reservation management
+      description: Cancel a hotel room reservation by ID
+      summary: Cancel reservation
+      parameters:
+        - in: query
+          name: reservation_id
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the reservation to cancel
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+  /add_reservation:
+    post:
+      tags:
+        - Reservation management
+      description: Creates a new hotel room reservation
+      summary: Create reservation
+      parameters:
+        - name: hotel_id
+          in: query
+          schema:
+            type: integer
+          description: Numeric ID of the hotel to create get for
+        - name: room_type
+          in: query
+          schema:
+            type: string
+          description: Room type of the reservation
+        - name: arrival_date
+          in: query
+          schema:
+            type: string
+          description: DD-MM-YYYY Arrival date of the reservation
+        - name: departure_date
+          in: query
+          schema:
+            type: string
+          description: DD-MM-YYYY Departure date of the reservation
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+  /get_inventory_list:
+    get:
+      tags:
+        - Reservation management
+      description: Gets available and occupied rooms by given hotel per day
+      summary: Gets inventory list
+      parameters:
+        - name: hotel_id
+          in: query
+          schema:
+            type: integer
+          description: Numeric ID of the hotel to create get for
+        - name: start_date
+          in: query
+          schema:
+            type: string
+          description: DD-MM-YYYY Start date to get from
+        - name: end_date
+          in: query
+          schema:
+            type: string
+          description: DD-MM-YYYY End date to get to
+      responses:
+        "201":
+          description: Created
+        "404":
+          description: Not Found
