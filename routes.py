@@ -1,10 +1,12 @@
 import copy
 from datetime import datetime, timedelta
+from sqlalchemy import exc
 from flask import Blueprint
 from flask import request
 from flask import jsonify
 from db.models import *
 from db.enums import ReservationStatus
+
 
 routes_blueprint = Blueprint('routes', __name__, )
 
@@ -31,29 +33,47 @@ def add_reservation():
         return "Departure date must always be set to after arrival date"
 
     db.session.add(new_reservation)
-    db.session.commit()
-    return "Reservation made"
+    try:
+        db.session.commit()
+        return "Reservation made"
+    except exc.IntegrityError as e:
+        return "No such hotel exists"
+    except exc.SQLAlchemyError as e:
+        return jsonify(e.args)
 
 
 @routes_blueprint.route('/cancel_reservation', methods=['PUT'])
 def cancel_reservation():
-    reservation = Reservation.query.filter_by(id=request.args['reservation_id']).first()
-    reservation.status = ReservationStatus.CANCELLED
-    db.session.commit()
-    return "Reservation canceled"
+    res = Reservation.query.filter_by(id=request.args['reservation_id']).first()
+    if res is None:
+        return "No such reservation exists"
+    try:
+        res.status = ReservationStatus.CANCELLED
+        db.session.commit()
+    except exc.SQLAlchemyError as e:
+        return jsonify(e.args)
+    return "Reservation {} canceled".format(request.args['reservation_id'])
 
 
 @routes_blueprint.route('/delete_reservation', methods=['DELETE'])
 def delete_reservation():
+    res = Reservation.query.filter_by(id=request.args['reservation_id']).first()
+    if res is None:
+        return "No such reservation exists"
+
     Reservation.query.filter_by(id=request.args['reservation_id']).delete()
     db.session.commit()
-    return "Reservation deleted"
+    return "Reservation {} deleted".format(request.args['reservation_id'])
 
 
 @routes_blueprint.route('/get_reservation', methods=['GET'])
 def get_reservation():
-    return jsonify(Reservation.query.filter_by(id=request.args['reservation_id'])
-                   .first().serialize())
+    res = jsonify(Reservation.query.filter_by(id=request.args['reservation_id']).first())
+
+    if res is None:
+        return "No such reservation exists"
+    return res.serialize()
+
 
 
 @routes_blueprint.route('/get_inventory_list', methods=['GET'])
