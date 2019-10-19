@@ -35,8 +35,8 @@ db.app = app
 db.init_app(app)
 
 # Create the database tables and delete previous data
-db.reflect()
-db.drop_all()
+# db.reflect()
+# db.drop_all()
 db.create_all()
 
 # Connect routes to app
