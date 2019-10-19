@@ -7,7 +7,7 @@ from routes import routes_blueprint
 env = Env()
 env.read_env()
 
-app = Flask(__name__)
+app = Flask(__name__, instance_relative_config=True)
 if env("ENV") == "dev":
     app.debug = True
     app.config['SQLALCHEMY_DATABASE_URI'] = env("SQLALCHEMY_DATABASE_URI")
