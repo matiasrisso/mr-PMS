@@ -25,10 +25,10 @@ env.read_env()
 app = Flask(__name__, instance_relative_config=True)
 if env("ENV") == "dev":
     app.debug = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = env("SQLALCHEMY_DATABASE_URI")
+    app.config['SQLALCHEMY_DATABASE_URI'] = env("SQLALCHEMY_LOCAL_DATABASE_URI")
 else:
     app.debug = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = ''
+    app.config['SQLALCHEMY_DATABASE_URI'] = env("SQLALCHEMY_REMOTE_DATABASE_URI")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.app = app
