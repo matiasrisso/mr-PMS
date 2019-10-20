@@ -43,9 +43,9 @@ db.create_all()
 app.register_blueprint(routes_blueprint)
 # app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
 
-if __name__ == '__main__':
-    # Add initial data to the tables
-    seed_all()
+# Add initial data to the tables
+seed_all()
 
+if __name__ == '__main__':
     # Run the app
     app.run(host='0.0.0.0', port=8000)
