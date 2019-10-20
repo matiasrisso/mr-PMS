@@ -4,6 +4,7 @@ from db.enums import *
 def seed_all():
     seed_hotels()
     seed_hotels_rooms()
+    print("Seed completed")
 
 def seed_hotels():
     # 1
