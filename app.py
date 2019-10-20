@@ -35,16 +35,15 @@ db.app = app
 db.init_app(app)
 
 # Create the database tables and delete previous data
-# db.reflect()
-# db.drop_all()
+db.reflect()
+db.drop_all()
 db.create_all()
+# Add initial data to the tables
+seed_all()
 
 # Connect routes to app
 app.register_blueprint(routes_blueprint)
 # app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
-
-# Add initial data to the tables
-seed_all()
 
 if __name__ == '__main__':
     # Run the app
