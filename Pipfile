@@ -17,6 +17,7 @@ flask-migrate = "*"
 flask-wtf = "*"
 flask-script = "*"
 flask-swagger-ui = "*"
+flask-cors = "*"
 
 [requires]
 python_version = "3.7"
