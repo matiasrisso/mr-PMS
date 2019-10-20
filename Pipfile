@@ -16,6 +16,7 @@ environs = "*"
 flask-migrate = "*"
 flask-wtf = "*"
 flask-script = "*"
+flask-swagger-ui = "*"
 
 [requires]
 python_version = "3.7"

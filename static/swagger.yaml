@@ -8,7 +8,7 @@ info:
 servers:
   - url: https://best-pms-ever.herokuapp.com
     description: Production server (uses live data)
-  - url: localhost:8000
+  - url: http://localhost:8000
     description: Sandbox server (uses test data)
 tags:
   - name: Reservation management
